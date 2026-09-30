@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # 👕 Fashion MNIST Classification App
 
 Welcome to the **Fashion MNIST Classification App**! This is a lightweight web application built with **Flask** that uses a trained Convolutional Neural Network (CNN) to intelligently identify and classify images of clothing items.
@@ -56,3 +57,6 @@ Here's a quick overview of what's inside this repository:
 
 ---
 *Built with ❤️ using Flask, TensorFlow, and Python.*
+=======
+# fashion-mnist-cnn
+>>>>>>> 8b8483cc2c9389a9fff8e56f2aea90d03ed8fc2b
