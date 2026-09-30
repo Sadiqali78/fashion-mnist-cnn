@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fashion Classifier</title>
+    <style>
+        :root {
+            --primary-color: #4a90e2;
+            --secondary-color: #f3f4f6;
+            --text-color: #333;
+            --bg-color: #fafafa;
+            --card-bg: #fff;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 2rem 0;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 2.5rem;
+        }
+
+        p.subtitle {
+            margin-top: 0.5rem;
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        main {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 3rem 1rem;
+        }
+
+        .container {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+            padding: 2.5rem;
+            width: 100%;
+            max-width: 600px;
+            text-align: center;
+        }
+
+        .upload-area {
+            border: 2px dashed #cbd5e1;
+            border-radius: 8px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background-color: var(--secondary-color);
+        }
+
+        .upload-area:hover, .upload-area.dragover {
+            border-color: var(--primary-color);
+            background-color: #eef2ff;
+        }
+
+        .upload-icon {
+            font-size: 3rem;
+            color: #94a3b8;
+            margin-bottom: 1rem;
+        }
+
+        .upload-text {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .upload-hint {
+            font-size: 0.875rem;
+            color: #64748b;
+        }
+
+        #file-input {
+            display: none;
+        }
+
+        .preview-container {
+            display: none;
+            margin-bottom: 2rem;
+        }
+
+        #image-preview {
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 0.75rem 2rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            width: 100%;
+        }
+
+        .btn:hover {
+            background-color: #3a7bc8;
+        }
+        
+        .btn:disabled {
+            background-color: #94a3b8;
+            cursor: not-allowed;
+        }
+
+        .result-container {
+            display: none;
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .result-title {
+            font-size: 1.25rem;
+            color: #64748b;
+            margin-bottom: 0.5rem;
+        }
+
+        .predicted-class {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin: 0 0 1rem 0;
+            text-transform: capitalize;
+        }
+
+        .confidence-bar-bg {
+            background-color: #e2e8f0;
+            border-radius: 999px;
+            height: 12px;
+            width: 100%;
+            overflow: hidden;
+            margin-bottom: 0.5rem;
+        }
+
+        .confidence-bar-fill {
+            background-color: #22c55e;
+            height: 100%;
+            width: 0%;
+            transition: width 1s ease-in-out;
+        }
+
+        .confidence-text {
+            font-size: 0.875rem;
+            color: #64748b;
+            font-weight: 600;
+        }
+
+        .loading {
+            display: none;
+            margin: 2rem 0;
+        }
+
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border-left-color: var(--primary-color);
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            color: #ef4444;
+            margin-top: 1rem;
+            display: none;
+        }
+
+        footer {
+            text-align: center;
+            padding: 1.5rem;
+            color: #94a3b8;
+            font-size: 0.875rem;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Fashion Classifier AI</h1>
+        <p class="subtitle">Upload an image of clothing to instantly identify it</p>
+    </header>
+
+    <main>
+        <div class="container">
+            <div class="upload-area" id="upload-area" onclick="document.getElementById('file-input').click();">
+                <div class="upload-icon">👕</div>
+                <div class="upload-text">Click or drag & drop an image</div>
+                <div class="upload-hint">Supports JPG, PNG, WEBP</div>
+                <input type="file" id="file-input" accept="image/*">
+            </div>
+
+            <div class="preview-container" id="preview-container">
+                <img id="image-preview" src="" alt="Preview">
+            </div>
+
+            <button class="btn" id="predict-btn" disabled>Identify Clothing</button>
+            
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p style="margin-top: 1rem; color: #64748b;">Analyzing image...</p>
+            </div>
+
+            <div class="error-message" id="error-message"></div>
+
+            <div class="result-container" id="result-container">
+                <div class="result-title">Prediction</div>
+                <h2 class="predicted-class" id="predicted-class">T-Shirt</h2>
+                
+                <div style="text-align: left; margin-top: 1.5rem;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                        <span style="font-size: 0.875rem; font-weight: 600;">Confidence</span>
+                        <span class="confidence-text" id="confidence-text">0%</span>
+                    </div>
+                    <div class="confidence-bar-bg">
+                        <div class="confidence-bar-fill" id="confidence-bar"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p>Powered by Convolutional Neural Networks &bull; Trained on Fashion MNIST</p>
+    </footer>
+
+    <script>
+        const uploadArea = document.getElementById('upload-area');
+        const fileInput = document.getElementById('file-input');
+        const previewContainer = document.getElementById('preview-container');
+        const imagePreview = document.getElementById('image-preview');
+        const predictBtn = document.getElementById('predict-btn');
+        const resultContainer = document.getElementById('result-container');
+        const predictedClassEl = document.getElementById('predicted-class');
+        const confidenceBar = document.getElementById('confidence-bar');
+        const confidenceText = document.getElementById('confidence-text');
+        const loading = document.getElementById('loading');
+        const errorMessage = document.getElementById('error-message');
+
+        let selectedFile = null;
+
+        // Handle drag and drop
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            
+            if (e.dataTransfer.files.length > 0) {
+                handleFile(e.dataTransfer.files[0]);
+            }
+        });
+
+        // Handle file input change
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFile(e.target.files[0]);
+            }
+        });
+
+        function handleFile(file) {
+            if (!file.type.startsWith('image/')) {
+                showError('Please upload an image file.');
+                return;
+            }
+
+            selectedFile = file;
+            const reader = new FileReader();
+            
+            reader.onload = (e) => {
+                imagePreview.src = e.target.result;
+                uploadArea.style.display = 'none';
+                previewContainer.style.display = 'block';
+                predictBtn.disabled = false;
+                resultContainer.style.display = 'none';
+                hideError();
+            };
+            
+            reader.readAsDataURL(file);
+        }
+
+        // Handle predict button click
+        predictBtn.addEventListener('click', async () => {
+            if (!selectedFile) return;
+
+            // Reset UI
+            predictBtn.disabled = true;
+            resultContainer.style.display = 'none';
+            loading.style.display = 'block';
+            hideError();
+
+            const formData = new FormData();
+            formData.append('file', selectedFile);
+
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.error) {
+                    showError(data.error);
+                } else {
+                    displayResult(data);
+                }
+            } catch (error) {
+                showError('An error occurred while connecting to the server.');
+            } finally {
+                loading.style.display = 'none';
+                predictBtn.disabled = false;
+            }
+        });
+
+        function displayResult(data) {
+            predictedClassEl.textContent = data.class;
+            
+            const confidencePercent = (data.confidence * 100).toFixed(1);
+            confidenceText.textContent = `${confidencePercent}%`;
+            
+            // Set bar color based on confidence
+            if (data.confidence > 0.8) {
+                confidenceBar.style.backgroundColor = '#22c55e'; // Green
+            } else if (data.confidence > 0.5) {
+                confidenceBar.style.backgroundColor = '#eab308'; // Yellow
+            } else {
+                confidenceBar.style.backgroundColor = '#ef4444'; // Red
+            }
+            
+            resultContainer.style.display = 'block';
+            
+            // Animate bar
+            setTimeout(() => {
+                confidenceBar.style.width = `${confidencePercent}%`;
+            }, 50);
+        }
+
+        function showError(msg) {
+            errorMessage.textContent = msg;
+            errorMessage.style.display = 'block';
+        }
+
+        function hideError() {
+            errorMessage.style.display = 'none';
+        }
+
+        // Allow clicking preview to change image
+        imagePreview.addEventListener('click', () => {
+            fileInput.click();
+        });
+    </script>
+</body>
+</html>
